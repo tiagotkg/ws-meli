@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 from typing import Dict, List
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
 
 
 def _init_driver() -> webdriver.Chrome:
@@ -19,7 +20,20 @@ def _init_driver() -> webdriver.Chrome:
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
-    service = Service(ChromeDriverManager().install())
+
+    # Locate Chrome/Chromium binary either from environment or common names
+    chrome_bin = (
+        os.environ.get("GOOGLE_CHROME_BIN")
+        or shutil.which("google-chrome-stable")
+        or shutil.which("google-chrome")
+        or shutil.which("chromium")
+        or shutil.which("chromium-browser")
+    )
+    if chrome_bin:
+        options.binary_location = chrome_bin
+
+    driver_path = os.environ.get("CHROMEDRIVER") or shutil.which("chromedriver")
+    service = Service(driver_path) if driver_path else None
     return webdriver.Chrome(service=service, options=options)
 
 
